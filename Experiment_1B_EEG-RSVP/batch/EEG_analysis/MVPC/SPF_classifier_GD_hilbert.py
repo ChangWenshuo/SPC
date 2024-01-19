@@ -7,16 +7,12 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 mpl.use('Agg')
 import mne
-from mne.time_frequency import AverageTFR, EpochsTFR, read_tfrs
-from mne import create_info, read_epochs
-from mne.decoding import (Scaler, Vectorizer, CSP,
-                         SlidingEstimator, GeneralizingEstimator, cross_val_multiscore)
+from mne import read_epochs
+from mne.decoding import Scaler, Vectorizer
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import (RepeatedStratifiedKFold, StratifiedKFold, 
-                                     cross_val_score)
+from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.feature_selection import SelectPercentile, f_classif
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import permutation_test_score
 random.seed(int(time.time()))
 print(mne.sys_info())
@@ -67,7 +63,6 @@ def extract_data(epc, condition_head='speech_act_type'):
 ptimes = 1000
 ptimes1 = 100000
 RootPath = '~/Experiments/SPF'
-pars = np.loadtxt(opj(RootPath,'batch/classifier/featsel_GD_ind.txt'),dtype=str)
 lpf = 30
 featsel = 100
 thr = 100
@@ -139,17 +134,10 @@ if not os.path.exists(outfile+'.pkl'):
                     print(X1.shape, len(y1), len(runs))
                     # Assemble the classifier using scikit-learn pipeline
                     fml = LinearSVC(max_iter=100000)
-                    if featsel == 100:
-                        clf = make_pipeline(Scaler(scalings='mean'),
-                                            Vectorizer(),
-                                            fml
-                                            )
-                    else:
-                        clf = make_pipeline(SelectPercentile(f_classif, percentile=featsel),
-                                            Scaler(scalings='mean'),
-                                            Vectorizer(),
-                                            fml
-                                            )
+                    clf = make_pipeline(Scaler(scalings='mean'),
+                                        Vectorizer(),
+                                        fml
+                                        )
                     le = LabelEncoder()
                     # ROI loop
                     for RoiNum, chans in Rois.items():
