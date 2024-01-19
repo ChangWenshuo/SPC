@@ -100,7 +100,7 @@ def extract_data(epc, condition_head='speech_act_type', time_max='Time34',
 ########################
 ptimes = 1000
 ptimes1 = 100000
-RootPath = '/gpfs/share/home/1701110673/Experiments/SPE'
+RootPath = '~/Experiments/SPE'
 lpf = 30
 featsel = 100
 thr = 100
