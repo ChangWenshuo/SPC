@@ -7,15 +7,12 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 mpl.use('Agg')
 from mne import sys_info
-from mne.time_frequency import AverageTFR, EpochsTFR, read_tfrs
-from mne import create_info, read_epochs
-from mne.decoding import (Scaler, Vectorizer, CSP,
-                         SlidingEstimator, GeneralizingEstimator, cross_val_multiscore)
+from mne import read_epochs
+from mne.decoding import Scaler, Vectorizer
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import (RepeatedStratifiedKFold, StratifiedKFold, 
-                                     cross_val_score)
+from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import permutation_test_score
 random.seed(int(time.time()))
 print(sys_info())
@@ -104,18 +101,8 @@ def extract_data(epc, condition_head='speech_act_type', time_max='Time34',
 ptimes = 1000
 ptimes1 = 100000
 RootPath = '/gpfs/share/home/1701110673/Experiments/SPE'
-pars = np.loadtxt(opj(RootPath,'batch/classifier/featsel_GD_ind.txt'),dtype=str)
 lpf = 30
-featsel = 100.
-if featsel > 1:
-    featsel = int(featsel)
-    if featsel != 1: from sklearn.feature_selection import SelectPercentile, f_classif
-elif featsel <= 1 and featsel > 0:
-    from sklearn.feature_selection import SelectFromModel
-    from sklearn.decomposition import PCA
-    featsel = np.round(featsel, 2)
-else:
-    print('Please specify a threshold for feature selection')
+featsel = 100
 thr = 100
 (b1, b2) = (-0.1, 0.)
 n_jobs = 32
@@ -176,26 +163,10 @@ if not os.path.exists(outfile+'.pkl'):
                 print(X1.shape, len(y1), len(runs))
                 # Assemble the classifier using scikit-learn pipeline
                 fml = LinearSVC(max_iter=100000)
-                if featsel == 100:
-                    clf = make_pipeline(Scaler(scalings='mean'),
-                                        Vectorizer(),
-                                        fml
-                                        )
-                elif featsel > 1 and feasel < 100:
-                    clf = make_pipeline(SelectPercentile(f_classif, percentile=featsel),
-                                        Scaler(scalings='mean'),
-                                        Vectorizer(),
-                                        fml
-                                        )
-                elif featsel <= 1 and featsel > 0:
-                    pca_dr = PCA(n_components = featsel)
-                    clf = make_pipeline(pca_dr,
-                                        Scaler(scalings='mean'),
-                                        Vectorizer(),
-                                        fml
-                                        )
-                else:
-                    print('Please specify a threshold for feature selection')
+                clf = make_pipeline(Scaler(scalings='mean'),
+                                    Vectorizer(),
+                                    fml
+                                    )
                 le = LabelEncoder()
                 # ROI loop
                 for RoiNum, chans in Rois.items():
